@@ -73,12 +73,21 @@
             app:cornerRadius="12dp"/>
     </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
+       <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerConfig"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_marginTop="12dp"
         android:clipToPadding="false"
-        android:paddingBottom="16dp"/>
+        android:paddingBottom="8dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Creator Shubin Evgeniy"
+        android:textAppearance="?attr/textAppearanceLabelSmall"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:gravity="center"/>
 </LinearLayout>
