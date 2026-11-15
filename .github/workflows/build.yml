@@ -24,6 +24,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.5
+          cache-disabled: true   # Добавьте эту строку для отключения кэширования
 
       - name: Generate Gradle wrapper
         run: gradle wrapper --gradle-version 8.5
