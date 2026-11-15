@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Signed APK
 
 on:
   push:
@@ -18,21 +18,29 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      # Единственный неочевидный шаг: генерируем gradle wrapper прямо в CI.
-      # Это избавляет нас от необходимости хранить gradle-wrapper.jar в репозитории.
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: 8.7   # было 8.5, измените на 8.7
+          gradle-version: 8.7
+          cache-disabled: true
 
       - name: Generate Gradle wrapper
-        run: gradle wrapper --gradle-version 8.7   # было 8.5, измените на 8.7
+        run: gradle wrapper --gradle-version 8.7
 
-      - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > $RUNNER_TEMP/release.jks
+          echo "KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> $GITHUB_ENV
+
+      - name: Build release APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: catpwddecoder-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: catpwddecoder-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
