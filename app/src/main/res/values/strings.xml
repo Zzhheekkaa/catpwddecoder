@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">CAT PWD Decoder</string>
+    <string name="btn_pick">Выбрать XML-файл конфигурации</string>
+    <string name="btn_share">Поделиться результатом</string>
+    <string name="hint_result">Здесь появится результат расшифровки…</string>
+    <string name="label_engine_serial">Серийный номер двигателя</string>
+    <string name="label_passwords">Расшифрованные пароли</string>
+    <string name="toast_no_file">Файл не выбран</string>
 </resources>
