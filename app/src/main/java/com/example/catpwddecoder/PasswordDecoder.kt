@@ -51,4 +51,13 @@ object PasswordDecoder {
         }
         return result
     }
+
+    /** Извлекает серийный номер двигателя из <ECMInfo> или <Config>. */
+    fun parseEngineSerial(xml: String): String? {
+        val regex = Regex(
+            "<Description>\\s*Engine Serial Number\\s*</Description>\\s*<Value>(.*?)</Value>",
+            setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
+        )
+        return regex.find(xml)?.groupValues?.get(1)?.trim()?.takeIf { it.isNotEmpty() }
+    }
 }
