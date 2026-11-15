@@ -76,10 +76,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun shareResult() {
+        private fun shareResult() {
         if (lastPasswords.isEmpty()) return
         val text = buildString {
-            appendLine("CAT ECM Password Decoder")
             appendLine("Engine Serial Number: $lastEngineSerial")
             appendLine()
             lastPasswords.forEach { (label, pwd) ->
