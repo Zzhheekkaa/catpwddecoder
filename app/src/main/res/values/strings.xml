@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CAT Configuration Decoder</string>
+    <string name="btn_pick">Открыть XML</string>
+    <string name="btn_compare">Сравнить</string>
+    <string name="btn_share">Поделиться</string>
+    <string name="creator_signature">Creator Shubin Evgeniy</string>
+
+    <string name="activation_hint">Введите пароль для активации</string>
+    <string name="activation_password_hint">Пароль</string>
+    <string name="btn_activate">Активировать</string>
+
+    <string name="compare_title">Сравнение файлов</string>
+    <string name="hide_matches">Скрыть совпадения</string>
+    <string name="left_file">Файл A</string>
+    <string name="right_file">Файл B</string>
+    <string name="btn_pick_left">Выбрать A</string>
+    <string name="btn_pick_right">Выбрать B</string>
+</resources>
