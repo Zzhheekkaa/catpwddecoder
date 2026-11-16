@@ -1,11 +1,11 @@
 package com.example.catpwddecoder
 
-import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -14,6 +14,8 @@ import com.google.android.material.checkbox.MaterialCheckBox
 
 class CompareActivity : AppCompatActivity() {
 
+    private val viewModel: CompareViewModel by viewModels()
+
     private lateinit var recycler: RecyclerView
     private lateinit var cbHide: MaterialCheckBox
     private lateinit var tvLeftName: TextView
@@ -21,17 +23,14 @@ class CompareActivity : AppCompatActivity() {
 
     private val adapter = CompareAdapter()
 
-    private var leftItems: List<ConfigItem> = emptyList()
-    private var rightItems: List<ConfigItem> = emptyList()
-
     private val pickLeft = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { res ->
-        if (res.resultCode == Activity.RESULT_OK) {
+        if (res.resultCode == RESULT_OK) {
             res.data?.data?.let {
-                tvLeftName.text = fileNameOf(it)
-                leftItems = loadItems(it)
-                rebuild()
+                viewModel.leftName = fileNameOf(it)
+                viewModel.leftItems = loadItems(it)
+                restoreFromViewModel()
             }
         }
     }
@@ -39,11 +38,11 @@ class CompareActivity : AppCompatActivity() {
     private val pickRight = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { res ->
-        if (res.resultCode == Activity.RESULT_OK) {
+        if (res.resultCode == RESULT_OK) {
             res.data?.data?.let {
-                tvRightName.text = fileNameOf(it)
-                rightItems = loadItems(it)
-                rebuild()
+                viewModel.rightName = fileNameOf(it)
+                viewModel.rightItems = loadItems(it)
+                restoreFromViewModel()
             }
         }
     }
@@ -60,7 +59,11 @@ class CompareActivity : AppCompatActivity() {
         recycler.layoutManager = LinearLayoutManager(this)
         recycler.adapter = adapter
 
+        cbHide.isChecked = viewModel.hideMatches
+        adapter.setHideMatches(viewModel.hideMatches)
+
         cbHide.setOnCheckedChangeListener { _, checked ->
+            viewModel.hideMatches = checked
             adapter.setHideMatches(checked)
         }
 
@@ -69,6 +72,19 @@ class CompareActivity : AppCompatActivity() {
         }
         findViewById<MaterialButton>(R.id.btnPickRight).setOnClickListener {
             launchPicker(pickRight)
+        }
+
+        restoreFromViewModel()
+    }
+
+    private fun restoreFromViewModel() {
+        tvLeftName.text = viewModel.leftName.ifBlank { getString(R.string.left_file) }
+        tvRightName.text = viewModel.rightName.ifBlank { getString(R.string.right_file) }
+
+        if (viewModel.leftItems.isEmpty() && viewModel.rightItems.isEmpty()) {
+            adapter.submit(emptyList())
+        } else {
+            adapter.submit(buildRows(viewModel.leftItems, viewModel.rightItems))
         }
     }
 
@@ -91,14 +107,6 @@ class CompareActivity : AppCompatActivity() {
         } catch (_: Exception) {
             emptyList()
         }
-    }
-
-    private fun rebuild() {
-        if (leftItems.isEmpty() && rightItems.isEmpty()) {
-            adapter.submit(emptyList())
-            return
-        }
-        adapter.submit(buildRows(leftItems, rightItems))
     }
 
     private fun buildRows(left: List<ConfigItem>, right: List<ConfigItem>): List<CompareRow> {
