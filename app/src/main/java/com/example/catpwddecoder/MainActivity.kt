@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -14,13 +15,12 @@ import com.google.android.material.button.MaterialButton
 
 class MainActivity : AppCompatActivity() {
 
+    private val viewModel: MainViewModel by viewModels()
+
     private lateinit var tvEcmName: TextView
     private lateinit var recycler: RecyclerView
     private lateinit var btnShare: MaterialButton
     private val adapter = ConfigAdapter()
-
-    private var lastEngineSerial: String = "—"
-    private var lastPasswords: List<Pair<String, String>> = emptyList()
 
     private val pickFile = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -54,39 +54,55 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnShare.setOnClickListener { shareResult() }
+
+        // Восстановление из ViewModel (переживает поворот)
+        restoreFromViewModel()
+    }
+
+    private fun restoreFromViewModel() {
+        tvEcmName.text = viewModel.ecmName
+
+        if (viewModel.items.isNotEmpty()) {
+            adapter.submit(buildDisplayList(viewModel.items))
+        }
+
+        if (viewModel.passwords.isNotEmpty()) {
+            btnShare.visibility = View.VISIBLE
+            btnShare.isEnabled = true
+        } else {
+            btnShare.visibility = View.GONE
+            btnShare.isEnabled = false
+        }
     }
 
     private fun handleUri(uri: Uri) {
         try {
             val xml = contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
             if (xml.isNullOrBlank()) {
-                tvEcmName.text = ""
-                adapter.submit(emptyList())
-                btnShare.visibility = View.GONE
-                btnShare.isEnabled = false
+                viewModel.items = emptyList()
+                viewModel.ecmName = ""
+                viewModel.passwords = emptyList()
+                viewModel.engineSerial = "—"
+                restoreFromViewModel()
                 return
             }
 
             val ecmName = EcmParser.parseEcmName(xml) ?: "—"
-            tvEcmName.text = if (ecmName == "—") "" else "Модель: $ecmName"
+            val displayName = if (ecmName == "—") "" else "Модель: $ecmName"
 
-            lastEngineSerial = EcmParser.parseEngineSerial(xml) ?: "—"
-            lastPasswords = EcmParser.parsePasswords(xml)
             val allItems = EcmParser.parseAll(xml)
+            val passwords = EcmParser.parsePasswords(xml)
+            val engineSerial = EcmParser.parseEngineSerial(xml) ?: "—"
 
-            val displayList = mutableListOf<ConfigItem>()
-            val grouped = allItems.groupBy { it.section }
-            for (section in listOf("ECM Info", "Configuration", "Totals")) {
-                val sectionItems = grouped[section] ?: continue
-                if (section != "ECM Info") {
-                    displayList += ConfigItem(section, "", "")
-                }
-                displayList += sectionItems
-            }
+            viewModel.ecmName = displayName
+            viewModel.items = allItems
+            viewModel.passwords = passwords
+            viewModel.engineSerial = engineSerial
 
-            adapter.submit(displayList)
+            tvEcmName.text = displayName
+            adapter.submit(buildDisplayList(allItems))
 
-            if (lastPasswords.isNotEmpty()) {
+            if (passwords.isNotEmpty()) {
                 btnShare.visibility = View.VISIBLE
                 btnShare.isEnabled = true
             } else {
@@ -94,26 +110,40 @@ class MainActivity : AppCompatActivity() {
                 btnShare.isEnabled = false
             }
         } catch (e: Exception) {
-            tvEcmName.text = ""
-            adapter.submit(emptyList())
-            btnShare.visibility = View.GONE
-            btnShare.isEnabled = false
+            viewModel.items = emptyList()
+            viewModel.ecmName = ""
+            viewModel.passwords = emptyList()
+            viewModel.engineSerial = "—"
+            restoreFromViewModel()
         }
     }
 
+    private fun buildDisplayList(allItems: List<ConfigItem>): List<ConfigItem> {
+        val displayList = mutableListOf<ConfigItem>()
+        val grouped = allItems.groupBy { it.section }
+        for (section in listOf("ECM Info", "Configuration", "Totals")) {
+            val sectionItems = grouped[section] ?: continue
+            if (section != "ECM Info") {
+                displayList += ConfigItem(section, "", "")
+            }
+            displayList += sectionItems
+        }
+        return displayList
+    }
+
     private fun shareResult() {
-        if (lastPasswords.isEmpty() && lastEngineSerial == "—") return
+        if (viewModel.passwords.isEmpty() && viewModel.engineSerial == "—") return
         val text = buildString {
-            appendLine("Engine Serial Number: $lastEngineSerial")
+            appendLine("Engine Serial Number: ${viewModel.engineSerial}")
             appendLine()
-            lastPasswords.forEach { (label, pwd) ->
+            viewModel.passwords.forEach { (label, pwd) ->
                 appendLine("$label: ${pwd.ifBlank { "(пусто)" }}")
             }
         }.trimEnd()
 
         val sendIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, "CAT ECM ($lastEngineSerial)")
+            putExtra(Intent.EXTRA_SUBJECT, "CAT ECM (${viewModel.engineSerial})")
             putExtra(Intent.EXTRA_TEXT, text)
         }
         startActivity(Intent.createChooser(sendIntent, "Поделиться результатом"))
