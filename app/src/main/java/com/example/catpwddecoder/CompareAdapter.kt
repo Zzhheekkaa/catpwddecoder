@@ -74,12 +74,9 @@ class CompareAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                 else ContextCompat.getColor(ctx, android.R.color.holo_red_light)
                 holder.itemView.setBackgroundColor(bg)
 
-                val textColor = if (r.isMatch)
-                    ContextCompat.getColor(ctx, android.R.color.primary_text_light)
-                else Color.WHITE
-                holder.desc.setTextColor(textColor)
-                holder.left.setTextColor(textColor)
-                holder.right.setTextColor(textColor)
+                holder.desc.setTextColor(Color.WHITE)
+                holder.left.setTextColor(Color.WHITE)
+                holder.right.setTextColor(Color.WHITE)
             }
         }
     }
