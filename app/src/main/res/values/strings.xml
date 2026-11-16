@@ -1,7 +1,0 @@
-<resources>
-    <string name="app_name">CAT Configuration Decoder</string>
-    <string name="btn_pick">Открыть XML</string>
-    <string name="btn_share">Поделиться</string>
-    <string name="label_engine_serial">Серийный номер двигателя</string>
-    <string name="creator_signature">Creator Shubin Evgeniy</string>
-</resources>
